@@ -1,0 +1,48 @@
+#!/bin/bash
+set -e
+
+filename=$(basename "$1")
+filepath=$(dirname "$1")
+fileinfo=$(file -i "$1")
+
+cd "$filepath"
+destination="${filename%.*}-unpacked"
+
+# zip
+if [[ $fileinfo =~ "application/zip" ]]; then
+	mkdir "$destination"
+	unzip "$filename" -d "$destination"
+	echo "Extracted file to $destination"
+
+#gzip
+elif [[ $fileinfo =~ "application/gzip" ]]; then
+	gzip -dk "$filename"
+
+#bzip2
+elif [[ $fileinfo =~ "application/x-bzip2" ]]; then
+	bzip2 -dk "$filename"
+
+#bzip
+elif [[ $fileinfo =~ "application/x-bzip" ]]; then
+	bzip -dk "$filename"
+#rar
+elif [[ $fileinfo =~ "application/x-rar" || $fileinfo =~ "application/vnd.rar" ]]; then
+	mkdir "$destination"
+	unrar x "$filename" "$destination"
+	echo "Extracted file to $destination"
+
+#tar
+elif [[ $fileinfo =~ "application/x-tar" ]]; then
+	mkdir "$destination"
+	tar -xvf "$filename" -C "$destination"
+	echo "Extracted file to $destination"
+
+#7zip
+elif [[ $fileinfo =~ "application/x-7z-compressed" ]]; then
+	mkdir "$destination"
+	7za e "$filename" -o"$destination"
+	echo "Extracted file to $destination"
+else
+	echo "Unknown compression!"
+
+fi

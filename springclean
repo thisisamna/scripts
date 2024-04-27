@@ -1,0 +1,62 @@
+#!/bin/bash
+#script to tidy up your downloads folder by moving different files to their designated folder
+read -n1 -p "Ready to clean up your downloads? [Y/n]:" choice
+if [[ $choice != 'Y' && $choice != 'y' ]]; then
+    exit
+fi
+cd ~/Downloads || exit
+printf "\n===================\n"
+for file in ./*; do
+    filename=$(basename "$file")
+    echo "File: $filename"
+    extension=${filename##*.} #get extension by removing longest *. match
+    case $extension in
+    pdf | epub | doc | docx | odf)
+        folder=~/Documents
+        ;;
+    jpg | jpeg | png | svg)
+        folder=~/Pictures
+        ;;
+    mp3)
+        folder=~/Music
+        ;;
+    mp4)
+        folder=~/Videos
+        ;;
+    *)
+        folder="[choose folder]"
+        ;;
+    esac
+    read -n1 -p "==> [S]kip   [M]ove to $folder   [T]rash   [E]xit" choice
+    case $choice in
+    S | s)
+        echo -ne "\r\033[K==> Skipped"
+        ;;
+    M | m)
+        if [[ "$folder" == "[choose folder]" ]]; then
+            echo ""
+            read -p "Enter folder path: " folder
+            folder="${folder/#\~/$HOME}"
+            if [[ ! -d "$folder" ]]; then
+                echo "Not a valid path! Skipping..."
+                continue
+            fi
+        fi
+        mv "$file" "$folder" || continue
+        echo -ne "\r\033[K==> Moved to $folder"
+        ;;
+    T | t)
+        gio trash "$file" || continue
+        echo -ne "\r\033[K==> Trashed"
+
+        ;;
+    E | e)
+        echo -ne "\r\033[K==> Exiting..."
+        exit
+        ;;
+    *)
+        echo -ne "\r\033[K==> Invalid input! Skipping..."
+        ;;
+    esac
+    printf "\n===================\n"
+done

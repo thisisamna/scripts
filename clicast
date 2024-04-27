@@ -1,0 +1,52 @@
+#!/bin/bash
+weatherinfo=$(curl -s https://api.open-meteo.com/v1/forecast\?latitude\=30.0626\&longitude\=31.2497\&current\=is_day,temperature_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m\&daily\=temperature_2m_max,temperature_2m_min\&timezone\=auto\&forecast_days\=1)
+current_temp=$(echo $weatherinfo | jq '.current.temperature_2m')
+apparent_temp=$(echo $weatherinfo | jq '.current.apparent_temperature')
+wind_speed=$(echo $weatherinfo | jq '.current.wind_speed_10m')
+
+max_temp=$(echo $weatherinfo | jq '.daily.temperature_2m_max[0]')
+min_temp=$(echo $weatherinfo | jq '.daily.temperature_2m_min[0]')
+weather_code=$(echo $weatherinfo | jq '.current.weather_code')
+is_day=$(echo $weatherinfo | jq '.current.is_day')
+
+#Greet
+case $is_day in
+1)
+    greeting="🌅--- Good day, $USER!"
+    ;;
+0)
+    greeting="🌃--- Good evening, $USER!"
+    ;;
+esac
+#Determine weather message
+case $weather_code in
+0)
+    description="☀️ --- Clear skies."
+    ;;
+
+1 | 2)
+    description="☁️ --- A few clouds here and there."
+    ;;
+
+3)
+    description="☁️ --- Cloudy"
+    ;;
+
+51 | 53 | 55)
+    description="🌦️ --- Drizzle!"
+    ;;
+
+61 | 63 | 65)
+    description="🌧️ --- Rain!"
+    ;;
+*)
+    description="😶--- Not sure what weather we got here!"
+    ;;
+esac
+#Print the forecast
+echo "///   w e a t h e r   f o r e c a s t   ///"
+echo "$greeting"
+echo "$description"
+echo "🌡️ --- Currently $current_temp°C but feels like $apparent_temp°C."
+echo " ---- Today's weather ranges between $min_temp°C and $max_temp°C."
+echo "🍃--- Wind speed is ${wind_speed}km/h."

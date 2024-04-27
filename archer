@@ -1,0 +1,22 @@
+#!/bin/bash
+xmlgetnext() {
+    local IFS='>'
+    read -d '<' tag value
+}
+
+feed=$(curl --silent "https://archlinux.org/feeds/news/")
+
+echo "///   a r c h    n e w s   ///"
+
+echo $feed | while xmlgetnext; do
+    if [[ $tag == "title" ]]; then
+        printf "📣 ${value}\n"
+    elif [[ $tag == "description" ]]; then
+        #sed gynmastics to remove encoded html entities
+        feed=$(echo $value | sed -re 's/&lt;.?(p|em|pre|strong|code|ol|ul|a href="[^"]*"|a)&gt;//g')
+        feed=$(echo $feed | sed -re 's/&lt;.?(li|p|br)&gt;/\n\n/g')
+        feed=$(echo $feed | sed -re 's/(&lt;|&amp;lt;)/\</g')
+        feed=$(echo $feed | sed -re 's/(&gt;|&amp;gt;)/\>/g')
+        printf "$feed\n\n"
+    fi
+done
